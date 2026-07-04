@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CanSat GCS — Mission GEO</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
+  <header class="header-bar">
+    <div class="header-left">
+      <div class="mission-logo">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="#00b4d8" stroke-width="1.5"/>
+          <path d="M10 2 L10 18 M2 10 L18 10" stroke="#00b4d8" stroke-width="1" opacity="0.5"/>
+          <circle cx="10" cy="10" r="2.5" fill="#00b4d8"/>
+        </svg>
+      </div>
+      <span class="mission-name">CANSAT <span class="mission-sep">|</span> MISSION GEO</span>
+    </div>
+
+    <div class="header-center">
+      <div class="phase-badge" id="phase-badge">
+        <span class="phase-dot"></span>
+        <span id="phase-text">PRE-LAUNCH</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="timer-block">
+        <span class="hdr-label" style="color: #9d4edd;">MET</span>
+        <span class="hdr-value" id="mission-timer">00:00</span>
+      </div>
+      <div class="divider-v"></div>
+      <div class="pkt-block">
+        <span class="hdr-label" style="color: #9d4edd;">PACKET</span>
+        <span class="hdr-value mono" id="pkt-counter" >PKT #0000</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════ MAIN ════════════════════════════════════════ -->
+  <main class="main-grid">
+
+    <!-- LEFT COLUMN: Map -->
+    <section class="panel map-panel">
+      <div class="panel-header">
+        <span class="panel-title">GPS TRACK</span>
+        <div class="signal-badge" id="signal-badge">
+          <div class="signal-bars" id="signal-bars">
+            <span class="bar" id="bar1"></span>
+            <span class="bar" id="bar2"></span>
+            <span class="bar" id="bar3"></span>
+            <span class="bar" id="bar4"></span>
+          </div>
+          <span class="rssi-val" id="rssi-val">RSSI: –72 dBm</span> -->
+        </div>
+      </div>
+      <div class="map-wrapper">
+        <div id="map"></div>
+        <div class="map-fallback" id="map-fallback">
+          <div class="grid-bg"></div>
+          <span class="fallback-text">MAP OFFLINE — TILE LOAD FAILED</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: Charts + Stats -->
+    <section class="right-col">
+
+      <!-- Chart 1: Altitude -->
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <span class="panel-title">ALTITUDE &amp; DESCENT RATE</span>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:#00b4d8"></span><span>Altitude (m)</span>
+            <span class="legend-dot" style="background:#f77f00; margin-left:12px"></span><span>Descent Rate (m/s)</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-altitude"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Temp + Pressure -->
+      <div class="panel chart-panel">
+        <div class="panel-header">
+          <span class="panel-title">TEMPERATURE &amp; PRESSURE</span>
+          <div class="chart-legend">
+            <span class="legend-dot" style="background:#f77f00"></span><span>Temp (°C)</span>
+            <span class="legend-dot" style="background:#9d4edd; margin-left:12px"></span><span>Pressure (hPa)</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-env"></canvas>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stat-row">
+
+        <div class="stat-card" id="card-altitude">
+          <div class="stat-label">ALTITUDE</div>
+          <div class="stat-value-row">
+            <span class="stat-value cyan" id="stat-alt">0.0</span>
+            <span class="stat-unit">m</span>
+            <span class="stat-trend" id="trend-alt"></span>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-temp">
+          <div class="stat-label">TEMPERATURE</div>
+          <div class="stat-value-row">
+            <span class="stat-value orange" id="stat-temp">28.0</span>
+            <span class="stat-unit">°C</span>
+            <span class="stat-trend" id="trend-temp"></span>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-descent">
+          <div class="stat-label">DESCENT RATE</div>
+          <div class="stat-value-row">
+            <span class="stat-value green" id="stat-descent">0.0</span>
+            <span class="stat-unit">m/s</span>
+            <span class="stat-trend" id="trend-descent"></span>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-batt">
+          <div class="stat-label">BATTERY</div>
+          <div class="stat-value-row">
+            <span class="stat-value cyan" id="stat-batt">8.40</span>
+            <span class="stat-unit">V</span>
+            <span class="stat-trend" id="trend-batt"></span>
+          </div>
+          <div class="batt-bar-bg">
+            <div class="batt-bar-fill" id="batt-bar"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+
+
+  <!-- AI pop-up -->
+  <div class="ai-panel" id="ai-panel">
+    <div class="ai-header">
+      <span class="panel-title">🤖 AI FLIGHT ANALYSIS</span>
+      <button class="ai-close" id="ai-close">✕</button>
+    </div>
+    <div class="ai-content" id="ai-content">
+      <div class="ai-loading" id="ai-loading">
+        <div class="ai-spinner"></div>
+        <span>Analysing flight data...</span>
+      </div>
+      <div class="ai-result" id="ai-result"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ FOOTER ═══════════════════════════════════════ -->
+  <footer class="footer-bar">
+    <div class="controls-row">
+      <button class="btn btn-green" id="btn-start">▶ START</button>
+      <button class="btn btn-yellow" id="btn-pause" disabled>⏸ PAUSE</button>
+      <button class="btn btn-red" id="btn-reset">↺ RESET</button>
+      <button class="btn btn-ghost" id="btn-export">⬇ Export CSV</button>
+      <button class="btn btn-purple" id="btn-ai">🤖 AI Analysis</button>
+      <div class="footer-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-label" id="status-label">STANDBY</span>
+      </div>
+    </div>
+    <div class="packet-log-wrap">
+      <div class="packet-log" id="packet-log">
+        <div class="log-line muted" style="color: aliceblue;">[00:00] — Ground Control Station ready. Awaiting simulation start.</div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
